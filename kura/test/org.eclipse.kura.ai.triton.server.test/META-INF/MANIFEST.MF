@@ -14,8 +14,5 @@ Import-Package: org.apache.commons.io;version="2.4.0",
  org.junit;version="4.12.0",
  org.junit.runner;version="4.12.0",
  org.junit.runners;version="4.12.0",
- org.mockito;version="1.10.19",
- org.mockito.invocation;version="1.10.19",
- org.mockito.stubbing;version="1.10.19",
  org.osgi.framework;version="1.7"
 Bundle-ActivationPolicy: lazy

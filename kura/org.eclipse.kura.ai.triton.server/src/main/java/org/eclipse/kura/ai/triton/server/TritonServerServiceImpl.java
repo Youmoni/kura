@@ -235,7 +235,7 @@ public class TritonServerServiceImpl implements InferenceEngineService, Inferenc
         try {
             ModelMetadataResponse modelMetadataResponse = this.grpcStub.modelMetadata(builder.build());
 
-            ModelInfoBuilder infoBuilder = ModelInfoBuilder.builder(modelMetadataResponse.getName());
+            ModelInfoBuilder infoBuilder = ModelInfo.builder(modelMetadataResponse.getName());
             String modelPlatform = modelMetadataResponse.getPlatform();
             if (nonNull(modelPlatform) && !modelPlatform.isEmpty()) {
                 infoBuilder.platform(modelPlatform);
@@ -245,12 +245,10 @@ public class TritonServerServiceImpl implements InferenceEngineService, Inferenc
                 infoBuilder.version(versions.get(versions.size() - 1));
             }
 
-            modelMetadataResponse.getInputsList()
-                    .forEach(tensor -> infoBuilder.addInputDescriptor(TensorDescriptorBuilder
-                            .builder(tensor.getName(), tensor.getDatatype(), tensor.getShapeList()).build()));
-            modelMetadataResponse.getOutputsList()
-                    .forEach(tensor -> infoBuilder.addOutputDescriptor(TensorDescriptorBuilder
-                            .builder(tensor.getName(), tensor.getDatatype(), tensor.getShapeList()).build()));
+            modelMetadataResponse.getInputsList().forEach(tensor -> infoBuilder.addInputDescriptor(
+                    TensorDescriptor.builder(tensor.getName(), tensor.getDatatype(), tensor.getShapeList()).build()));
+            modelMetadataResponse.getOutputsList().forEach(tensor -> infoBuilder.addOutputDescriptor(
+                    TensorDescriptor.builder(tensor.getName(), tensor.getDatatype(), tensor.getShapeList()).build()));
 
             modelInfo = Optional.of(infoBuilder.build());
         } catch (StatusRuntimeException | IllegalArgumentException e) {
@@ -556,8 +554,8 @@ public class TritonServerServiceImpl implements InferenceEngineService, Inferenc
             ByteString byteStringResponse = inferResponse.getRawOutputContentsList().get(index);
             if (nonNull(inferOutputTensor)) {
                 DataType outputType = DataType.valueOf(inferOutputTensor.getDatatype());
-                TensorDescriptorBuilder outputDescriptorBuilder = TensorDescriptorBuilder
-                        .builder(inferOutputTensor.getName(), outputType.toString(), inferOutputTensor.getShapeList());
+                TensorDescriptorBuilder outputDescriptorBuilder = TensorDescriptor.builder(inferOutputTensor.getName(),
+                        outputType.toString(), inferOutputTensor.getShapeList());
                 if (!inferOutputTensor.getParametersMap().isEmpty()) {
                     getParameters(inferOutputTensor.getParametersMap()).forEach(outputDescriptorBuilder::addParameter);
                 }

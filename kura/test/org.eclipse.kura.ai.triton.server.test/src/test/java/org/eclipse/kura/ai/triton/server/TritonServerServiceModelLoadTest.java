@@ -1,41 +1,82 @@
 package org.eclipse.kura.ai.triton.server;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Matchers.anyObject;
+import static org.junit.Assert.assertTrue;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 import org.eclipse.kura.KuraIOException;
 import org.junit.Test;
 
-import inference.GRPCInferenceServiceGrpc.GRPCInferenceServiceBlockingStub;
-
 public class TritonServerServiceModelLoadTest {
 
     TritonServerServiceImpl tritonServer;
-    GRPCInferenceServiceBlockingStub grpcStubMock;
+    boolean exceptionCaught = false;
 
     @Test
-    public void shouldLoadModel() throws KuraIOException {
+    public void shouldNotLoadModel() throws KuraIOException {
         givenTritonServerServiceImpl();
 
         whenLoadModel();
 
-        thenModelIsLoaded();
+        thenModelExceptionIsCaught();
+    }
+
+    @Test
+    public void shouldNotUnloadModel() throws KuraIOException {
+        givenTritonServerServiceImpl();
+
+        whenUnloadModel();
+
+        thenModelExceptionIsCaught();
+    }
+
+    @Test
+    public void shouldNotGetModelLoadState() throws KuraIOException {
+        givenTritonServerServiceImpl();
+
+        whenGetModelLoadState();
+
+        thenModelExceptionIsCaught();
     }
 
     private void givenTritonServerServiceImpl() {
+        this.exceptionCaught = false;
         this.tritonServer = new TritonServerServiceImpl();
-        this.grpcStubMock = mock(GRPCInferenceServiceBlockingStub.class);
-        this.tritonServer.setGrpcStub(grpcStubMock);
+        Map<String, Object> properties = new HashMap<>();
+        properties.put("server.address", "localhost");
+        properties.put("server.ports", "4000,4001,4002");
+        properties.put("enable.local", "false");
+        this.tritonServer.activate(properties);
     }
 
     private void whenLoadModel() throws KuraIOException {
-        this.tritonServer.loadModel("myModel", Optional.empty());
+        try {
+            this.tritonServer.loadModel("myModel", Optional.empty());
+        } catch (KuraIOException e) {
+            this.exceptionCaught = true;
+        }
     }
 
-    private void thenModelIsLoaded() {
-        verify(this.grpcStubMock).repositoryModelLoad(anyObject());
+    private void whenGetModelLoadState() throws KuraIOException {
+        try {
+            this.tritonServer.isModelLoaded("myModel");
+        } catch (KuraIOException e) {
+            this.exceptionCaught = true;
+        }
     }
+
+    private void whenUnloadModel() throws KuraIOException {
+        try {
+            this.tritonServer.unloadModel("myModel");
+        } catch (KuraIOException e) {
+            this.exceptionCaught = true;
+        }
+    }
+
+    private void thenModelExceptionIsCaught() {
+        assertTrue(exceptionCaught);
+    }
+
 }
